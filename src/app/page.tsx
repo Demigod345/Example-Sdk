@@ -61,7 +61,7 @@ export default function CryptoQuizGame() {
         setStep(questions.length + 1);
         handleQuizComplete();
       }
-    }, 1000);
+    }, 10);
   };
 
   const resetQuiz = () => {
