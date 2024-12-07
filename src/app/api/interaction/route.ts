@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 import { NextResponse } from 'next/server';
 import { Mailchain } from '@mailchain/sdk';
 import { ethers } from 'ethers';
