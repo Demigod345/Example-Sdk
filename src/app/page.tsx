@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -17,76 +15,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useAppKitProvider, useAppKitAccount } from "@reown/appkit/react";
-import {
-  Wallet,
-  Trophy,
-  AlertCircle,
-  CheckCircle2,
-  Activity,
-  MessageSquare,
-} from "lucide-react";
+import { Wallet, Trophy, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { toast } from "react-hot-toast";
 import { ethers } from "ethers";
-import  { EAS, SchemaEncoder }  from "@ethereum-attestation-service/eas-sdk";
 
-if(!process.env.NEXT_PUBLIC_SERVICE_ID) throw new Error("process.env.NEXT_PUBLIC_SERVICE_ID is not defined");
-const SERVICE_ID = process.env.NEXT_PUBLIC_SERVICE_ID;
-const easContractAddress = "0x4200000000000000000000000000000000000021";
-const schemaUID = "0xe20c6e1b422d9ff029f778636858a5ddf913d4ae5358bc0a4d1873c3b0ebe1f3";
+import { questions } from "./questions";
 
-const questions = [
-  {
-    question: "What is the main purpose of blockchain technology?",
-    options: [
-      "To create cryptocurrencies",
-      "To provide a decentralized and transparent ledger",
-      "To speed up internet connections",
-      "To replace traditional banking systems",
-    ],
-    correctAnswer: 1,
-  },
-  {
-    question: "What does 'HODL' stand for in the crypto community?",
-    options: [
-      "Hold On for Dear Life",
-      "Have Only Decentralized Ledgers",
-      "Highly Optimized Distributed Ledger",
-      "Hold On, Don't Lose",
-    ],
-    correctAnswer: 0,
-  },
-  {
-    question: "What is a 'smart contract' in blockchain technology?",
-    options: [
-      "A legally binding document",
-      "An AI-powered trading bot",
-      "Self-executing code on the blockchain",
-      "A type of cryptocurrency wallet",
-    ],
-    correctAnswer: 2,
-  },
-  {
-    question: "What is the process of 'mining' in cryptocurrency?",
-    options: [
-      "Extracting digital coins from the internet",
-      "Creating new cryptocurrencies",
-      "Verifying transactions and adding them to the blockchain",
-      "Hacking into crypto exchanges",
-    ],
-    correctAnswer: 2,
-  },
-  {
-    question: "What is a 'fork' in blockchain technology?",
-    options: [
-      "A type of cryptocurrency wallet",
-      "A split in the blockchain resulting in two separate chains",
-      "A method of encrypting transactions",
-      "A tool for analyzing market trends",
-    ],
-    correctAnswer: 1,
-  },
-];
-
+if (!process.env.NEXT_PUBLIC_SERVICE_ID) throw new Error("process.env.NEXT_PUBLIC_SERVICE_ID is not defined");
 
 export default function CryptoQuizGame() {
   const [step, setStep] = useState(0);
@@ -96,12 +31,10 @@ export default function CryptoQuizGame() {
   const [answeredQuestions, setAnsweredQuestions] = useState<boolean[]>(
     new Array(questions.length).fill(false)
   );
-  const { walletProvider } = useAppKitProvider();
   const { address, isConnected } = useAppKitAccount();
-  const eas = new EAS(easContractAddress);
 
   useEffect(() => {
-    if(isConnected && step === 0) {
+    if (isConnected && step === 0) {
       setStep(1);
     }
   }, [isConnected]);
@@ -126,7 +59,7 @@ export default function CryptoQuizGame() {
         setStep(questions.length + 1);
         handleQuizComplete();
       }
-    }, 10);
+    }, 1000);
   };
 
   const resetQuiz = () => {
@@ -137,114 +70,65 @@ export default function CryptoQuizGame() {
     setAnsweredQuestions(new Array(questions.length).fill(false));
   };
 
-  const getContract = async () => {
-    // if (!isConnected) {
-    //   toast.error("Wallet not connected");
-    //   return null;
-    // }
-    // try {
-    //   const ethersProvider = new ethers.BrowserProvider(window.ethereum);
-    //   const signer = await ethersProvider.getSigner();
-    //   const contract = new ethers.Contract(
-    //     contractAddress.address,
-    //     contractABI,
-    //     signer
-    //   );
-    //   toast.success("Contract fetched successfully");
-    //   return contract;
-    // } catch (error) {
-    //   toast.error("Failed to connect to the contract");
-    //   console.error(error);
-    //   return null;
-    // }
-  };
-
-  const signMessage = async () => {
+  const handleQuizComplete = async () => {
+    toast.success("Quiz completed! Great job!");
     try {
-      const ethersProvider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await ethersProvider.getSigner();
-      const timestamp = Math.floor(Date.now() / 1000);
-      // const interaction = {
-      //   user: signer.address,
-      //   serviceId: SERVICE_ID,
-      //   timestamp: timestamp
-      // };
+      const attestInteractionPromise =  toast.promise(
+        signMessage(),
+        {
+          loading: "Processing your interaction...",
+          success: "Kindly check your MailChain email for a confirmation message!",
+          error: "An error occurred while processing your interaction",
+        },
+      );
 
-      let newAttestationUID = "";
+      await attestInteractionPromise;
       
-      const SignMessagePromise = toast.promise(
-        (async () => {
-          await eas.connect(signer);
-          const schemaEncoder = new SchemaEncoder("address User,uint256 ServiceId,uint256 Timestamp");
-          const encodedData = schemaEncoder.encodeData([
-            { name: "User", value: signer.address, type: "address" },
-            { name: "ServiceId", value: SERVICE_ID, type: "uint256" },
-            { name: "Timestamp", value: BigInt(timestamp), type: "uint256" }
-          ]);
-          const tx = await eas.attest({
-            schema: schemaUID,
-            data: {
-              recipient: "0x0000000000000000000000000000000000000000",
-              expirationTime: 0,
-              revocable: false, // Be aware that if your schema is not revocable, this MUST be false
-              data: encodedData,
-            },
-          });
-          newAttestationUID = await tx.wait();
-          
-        })(),
-        {
-          loading: "Registering your interaction...",
-          success: "Interaction registered successfully!",
-          error: "Failed to register interaction",
-        }
+      window.open(
+        "https://app.mailchain.com/inbox",
+        "_blank",
+        "noopener,noreferrer"
       );
-
-      await SignMessagePromise;
-
-      const SendEmailPromise = toast.promise(
-        (async () => {
-          const response = await fetch("/api/mail", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ AttestationUID: newAttestationUID }), // Corrected this line
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "Failed to send invitation");
-          }
-
-          const data = await response.json();
-          return data.message;
-        })(),
-        {
-          loading: "Sending Magic Link to email...",
-          success: "Email sent successfully!",
-          error: (err) => `Error sending mail: ${err.message}`,
-        }
-      );
-
-      await SendEmailPromise;
-
-      toast.success("Kindly check your MailChain email for a confirmation message!", {
-        duration: 5000,
-      });
-
-      window.open("https://app.mailchain.com/inbox", "_blank", 'noopener,noreferrer');
-
     } catch (error) {
       console.error(error);
       toast.error("An error occurred while processing your interaction");
     }
   };
 
-  const handleQuizComplete = () => {
-    toast.success("Quiz completed! Great job!");
-    signMessage();
-  };
+  async function signMessage() {
+    try {
+      const ethersProvider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await ethersProvider.getSigner();
+      const timestamp = Math.floor(Date.now() / 1000);
+      const message = `Completing quiz interaction at timestamp: ${timestamp}`;
+      const signature = await signer.signMessage(message);
+  
+      console.log(address);
+      const response = await fetch("/api/interaction", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userAddress: address,
+          signature,
+          timestamp,
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to send invitation");
+      }
+  
+      const data = await response.json();
+      return data.message;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-500 to-pink-500">
