@@ -33,7 +33,7 @@ interface EmailContent {
 }
 
 function getHTMLContent(serviceId: string, signerAddress: string, uid: string): string {
-    const magicLink = `https://privacy-feedback.vercel.app/feedback/${uid}`;
+    const magicLink = `https://core-two-smoky.vercel.app/feedback/${uid}`;
     
     return `<!DOCTYPE html>
     <html lang="en">
@@ -88,7 +88,7 @@ function getHTMLContent(serviceId: string, signerAddress: string, uid: string): 
 }
 
 function getPlainTextContent({ serviceId, signerAddress, attestationUID }: EmailContent): string {
-    const magicLink = `https://privacy-feedback.vercel.app/feedback/${attestationUID}`;
+    const magicLink = `https://core-two-smoky.vercel.app/feedback/${attestationUID}`;
     return `PrivateFeedback Invitation
     
     Hello,
