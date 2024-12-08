@@ -20,7 +20,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "Crypto Quiz",
-  description: "Generated during the Oasis p4w3 Hackathon",
+  description: "Hi there! This is a quiz app for crypto enthusiasts.",
 };
 
 export default function RootLayout({
